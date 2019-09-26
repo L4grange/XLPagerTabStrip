@@ -185,7 +185,14 @@ open class PagerTabStripViewController: UIViewController, UIScrollViewDelegate {
     // MARK: - Helpers
 
     open func updateIfNeeded() {
-        if isViewLoaded && !lastSize.equalTo(containerView.bounds.size) {
+		var needsSafeAreaUpdate = false
+		if #available(iOS 11.0, *) {
+			let safeAreaInsets = containerView.safeAreaInsets
+			let childInsets = viewControllers[currentIndex].view.safeAreaInsets
+			needsSafeAreaUpdate = safeAreaInsets != childInsets
+		}
+
+        if isViewLoaded && (!lastSize.equalTo(containerView.bounds.size) || needsSafeAreaUpdate) {
             updateContent()
         }
     }
@@ -240,6 +247,11 @@ open class PagerTabStripViewController: UIViewController, UIScrollViewDelegate {
 
         for (index, childController) in pagerViewControllers.enumerated() {
             let pageOffsetForChild = self.pageOffsetForChild(at: index)
+
+			if #available(iOS 11.0, *) {
+				childController.additionalSafeAreaInsets = containerView.safeAreaInsets
+			}
+
             if abs(containerView.contentOffset.x - pageOffsetForChild) < containerView.bounds.width {
                 if childController.parent != nil {
                     childController.view.frame = CGRect(x: offsetForChild(at: index), y: 0, width: view.bounds.width, height: containerView.bounds.height)
